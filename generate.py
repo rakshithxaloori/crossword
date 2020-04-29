@@ -99,6 +99,8 @@ class CrosswordCreator():
         (Remove any values that are inconsistent with a variable's unary
          constraints; in this case, the length of the word.)
         """
+        # Remove a word from a variable's domain
+        # if word's length != variable's length
         for variable in self.domains.keys():
             for word in self.domains[variable]:
                 if len(word) != variable.length:
