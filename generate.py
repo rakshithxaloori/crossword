@@ -154,7 +154,32 @@ class CrosswordCreator():
         Return True if `assignment` is consistent (i.e., words fit in crossword
         puzzle without conflicting characters); return False otherwise.
         """
-        raise NotImplementedError
+        # Checking that all words are unique
+        for variableA, wordA in assignment.items():
+            for variableB, wordB in assignment.items():
+                if variableA == variableB:
+                    continue
+                if wordA == wordB:
+                    return False
+
+        # Checking that the words are of right length
+        for variable, word in assignment.keys():
+            if len(word) != variable.length:
+                return False
+
+        # Checking for conflicts
+        for variableA, wordA in assignment.items():
+            for variableB, wordB in assignment.items():
+                if variableA == variableB:
+                    continue
+                overlap = self.crossword.overlaps[variableA, variableB]
+                if overlap is None:
+                    continue
+                # If the letters at overlap don't match, not consistent
+                if wordX[overlap[0]] != wordY[overlap[1]]:
+                    return False
+
+        return True
 
     def order_domain_values(self, var, assignment):
         """
