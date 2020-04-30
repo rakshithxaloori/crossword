@@ -1,5 +1,5 @@
 import sys
-from random import choice
+from random import sample
 from copy import deepcopy
 
 from crossword import *
@@ -156,10 +156,10 @@ class CrosswordCreator():
         if arcs is None:
             arcs = list()
             # Use all arcs in the problem
-            for overlap in self.crossword.overlaps.keys():
+            for overlapTuple, overlap in self.crossword.overlaps.items():
                 # Overlap is all the arcs in the problem
-                arcs.append(overlap)
-
+                if overlap is not None:
+                    arcs.append(overlapTuple)
         for arc in arcs:
             # Revise the arc (x, y)
             # The arcs is a queue, so dequeue an arc
@@ -183,10 +183,11 @@ class CrosswordCreator():
         Return True if `assignment` is complete (i.e., assigns a value to each
         crossword variable); return False otherwise.
         """
-        for word in assignment.values():
-            # If the variable is not assigned a single value, return False
-            if word is None:
+        for variable in self.crossword.variables:
+            # If a variable isn't assigned a value, problem hasn't been solved yet
+            if variable not in assignment.keys():
                 return False
+
         return True
 
     def consistent(self, assignment):
@@ -194,6 +195,11 @@ class CrosswordCreator():
         Return True if `assignment` is consistent (i.e., words fit in crossword
         puzzle without conflicting characters); return False otherwise.
         """
+        # Checking that all variables have a word
+        for word in assignment.values():
+            if word is None:
+                return None
+
         # Checking that all words are unique
         for variableA, wordA in assignment.items():
             for variableB, wordB in assignment.items():
@@ -203,7 +209,7 @@ class CrosswordCreator():
                     return False
 
         # Checking that the words are of right length
-        for variable, word in assignment.keys():
+        for variable, word in assignment.items():
             if len(word) != variable.length:
                 return False
 
@@ -229,26 +235,24 @@ class CrosswordCreator():
         that rules out the fewest values among the neighbors of `var`.
         """
         countValues = dict()
+        sortedValues = list()
+        # Initialize the count
+        for value in self.domains[var]:
+            countValues[value] = 0
+
         neighbors = self.crossword.neighbors(var)
+        print("order_domain_values neighbors", neighbors)
         for neighbor in neighbors:
             if neighbor not in assignment:
+                print("Assigned")
                 # The neighbor hasn't been assigned a value
                 for valueV in self.domains[var]:
-                    for valueN in self.domains[neighbor]:
-                        # If the values match, increase the count of that value
-                        if valueV == valueN:
-                            if valueV not in countValues:
-                                countValues[valueV] = 0
-                            countValues[valueV] += 1
+                    sortedValues.append(valueV)  # Test
+                    # for valueN in self.domains[neighbor]:
+                    #     # If the values match, increase the count of that value
+                    #     if valueV == valueN:
+                    #         countValues[valueV] += 1
 
-        # Sort them in ascending order
-        sortedCount = list(countValues.values()).sort()
-        sortedValues = list()
-        for count in sortedCount:
-            for countValue in countValues.keys():
-                if count == countValues[countValue]:
-                    # Delete the countValue to avoid duplications
-                    sortedValues.append(countValues.pop(countValue))
         return sortedValues
 
     def select_unassigned_variable(self, assignment):
@@ -259,7 +263,9 @@ class CrosswordCreator():
         degree. If there is a tie, any of the tied variables are acceptable
         return values.
         """
-        variable = choice(list(assignment.keys()))
+        unassignedVariables = set(
+            self.crossword.variables) - set(assignment.keys())  # Test
+        variable = sample(unassignedVariables, 1)[0]
         return variable
 
     def backtrack(self, assignment):
@@ -273,8 +279,9 @@ class CrosswordCreator():
         """
         # The puzzle is solved
         if self.assignment_complete(assignment):
+            print(assignment)
             return assignment
-        
+
         var = self.select_unassigned_variable(assignment)
         for value in self.order_domain_values(var, assignment):
             assignmentCopy = deepcopy(assignment)
