@@ -117,6 +117,7 @@ class CrosswordCreator():
         False if no revision was made.
         """
         # x's domain must only contain those words that satisfy the overlaps with y
+        revisionMade = False
         for wordX in self.domains[x]:
             palFound = False
             for wordY in self.domains[y]:
@@ -127,6 +128,9 @@ class CrosswordCreator():
             if not palFound:
                 # Remove the word from x's domain
                 self.domains[x].remove(wordX)
+                revisionMade = True
+
+        return revisionMade
 
     def ac3(self, arcs=None):
         """
@@ -137,7 +141,30 @@ class CrosswordCreator():
         Return True if arc consistency is enforced and no domains are empty;
         return False if one or more domains end up empty.
         """
-        raise NotImplementedError
+        if arcs is None:
+            arcs = list()
+            # Use all arcs in the problem
+            for overlap in self.crossword.overlaps.keys():
+                # Overlap is all the arcs in the problem
+                arcs.append(overlap)
+
+        for arc in arcs:
+            # Revise the arc (x, y)
+            # The arcs is a queue, so dequeue an arc
+            arcs.remove(arc)
+            # If the revision is made, add all arcs of form (z, x) to arcs
+            if self.revise(x=arc[0], y=arc[1]):
+                # Add all neighbors of x in the form of (z, x)
+                for neighbor in self.crossword.neighbors(arc[0]):
+                    # Adding a neighbor to the queue
+                    arcs.append((neighbor, arc[0]))
+
+        # Check if domains are empty
+        for domain in self.domains.values():
+            if domain is None or len(domain) == 0:
+                return False
+
+        return True
 
     def assignment_complete(self, assignment):
         """
