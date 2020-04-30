@@ -235,8 +235,20 @@ class CrosswordCreator():
         The first value in the list, for example, should be the one
         that rules out the fewest values among the neighbors of `var`.
         """
+        # countValueNeighbor has the number of values of neighbors a value of var rules out
+        countValueNeighbor = dict()
+        for value in self.domains[var]:
+            # Initialize the count
+            countValueNeighbor[value] = 0
+            for neighbor in self.crossword.neighbors(var):
+                # Use overlap to find the matching words
+                overlap = self.crossword.overlaps[var, neighbor]
+                for word in self.domains[neighbor]:
+                    if value[overlap[0]] != word[overlap[1]]:
+                        # If the words match, this word could be ruled out by var=value
+                        countValueNeighbor[value] += 1
 
-        return list(self.domains[var])
+        return {k: v for k, v in sorted(countValueNeighbor.items(), key=lambda item: item[1])}
 
     def select_unassigned_variable(self, assignment):
         """
