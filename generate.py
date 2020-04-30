@@ -191,7 +191,7 @@ class CrosswordCreator():
         """
         countValues = dict()
         neighbors = self.crossword.neighbors(var)
-        for neighbor in neighbor:
+        for neighbor in neighbors:
             if neighbor not in assignment:
                 # The neighbor hasn't been assigned a value
                 for valueV in self.domains[var]:
@@ -203,8 +203,14 @@ class CrosswordCreator():
                             countValues[valueV] += 1
 
         # Sort them in ascending order
-        sortedList = list(countValues.values()).sort()
-        return sortedList
+        sortedCount = list(countValues.values()).sort()
+        sortedValues = list()
+        for count in sortedCount:
+            for countValue in countValues.keys():
+                if count == countValues[countValue]:
+                    # Delete the countValue to avoid duplications
+                    sortedValues.append(countValues.pop(countValue))
+        return sortedValues
 
     def select_unassigned_variable(self, assignment):
         """
