@@ -189,7 +189,22 @@ class CrosswordCreator():
         The first value in the list, for example, should be the one
         that rules out the fewest values among the neighbors of `var`.
         """
-        raise NotImplementedError
+        countValues = dict()
+        neighbors = self.crossword.neighbors(var)
+        for neighbor in neighbor:
+            if neighbor not in assignment:
+                # The neighbor hasn't been assigned a value
+                for valueV in self.domains[var]:
+                    for valueN in self.domains[neighbor]:
+                        # If the values match, increase the count of that value
+                        if valueV == valueN:
+                            if valueV not in countValues:
+                                countValues[valueV] = 0
+                            countValues[valueV] += 1
+
+        # Sort them in ascending order
+        sortedList = list(countValues.values()).sort()
+        return sortedList
 
     def select_unassigned_variable(self, assignment):
         """
