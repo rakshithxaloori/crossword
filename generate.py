@@ -1,4 +1,5 @@
 import sys
+from random import choice
 
 from crossword import *
 
@@ -198,7 +199,8 @@ class CrosswordCreator():
         degree. If there is a tie, any of the tied variables are acceptable
         return values.
         """
-        raise NotImplementedError
+        variable = choice(list(assignment.keys()))
+        return variable
 
     def backtrack(self, assignment):
         """
