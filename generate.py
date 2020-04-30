@@ -131,7 +131,7 @@ class CrosswordCreator():
                 if overlap is None:
                     continue
                 # If the letters match
-                if wordX[overlap[0]] == wordY[overlap[1]]:
+                if wordX[overlap[0]] == wordY[overlap[1]] and wordX != wordY:
                     palFound = True
                     break
             if not palFound:
@@ -160,9 +160,10 @@ class CrosswordCreator():
                 # Overlap is all the arcs in the problem
                 if overlap is not None:
                     arcs.append(overlapTuple)
-        for arc in arcs:
+        while len(arcs) > 0:
             # Revise the arc (x, y)
             # The arcs is a queue, so dequeue an arc
+            arc = arcs[0]
             arcs.remove(arc)
             # If the revision is made, add all arcs of form (z, x) to arcs
             if self.revise(x=arc[0], y=arc[1]):
@@ -195,11 +196,6 @@ class CrosswordCreator():
         Return True if `assignment` is consistent (i.e., words fit in crossword
         puzzle without conflicting characters); return False otherwise.
         """
-        # Checking that all variables have a word
-        for word in assignment.values():
-            if word is None:
-                return None
-
         # Checking that all words are unique
         for variableA, wordA in assignment.items():
             for variableB, wordB in assignment.items():
@@ -210,19 +206,23 @@ class CrosswordCreator():
 
         # Checking that the words are of right length
         for variable, word in assignment.items():
+            if word is None:
+                continue
             if len(word) != variable.length:
                 return False
 
         # Checking for conflicts
         for variableA, wordA in assignment.items():
+            if wordA is None:
+                continue
             for variableB, wordB in assignment.items():
-                if variableA == variableB:
+                if wordB is None or variableA == variableB:
                     continue
                 overlap = self.crossword.overlaps[variableA, variableB]
                 if overlap is None:
                     continue
                 # If the letters at overlap don't match, not consistent
-                if wordX[overlap[0]] != wordY[overlap[1]]:
+                if wordA[overlap[0]] != wordB[overlap[1]]:
                     return False
 
         return True
@@ -234,26 +234,8 @@ class CrosswordCreator():
         The first value in the list, for example, should be the one
         that rules out the fewest values among the neighbors of `var`.
         """
-        countValues = dict()
-        sortedValues = list()
-        # Initialize the count
-        for value in self.domains[var]:
-            countValues[value] = 0
 
-        neighbors = self.crossword.neighbors(var)
-        print("order_domain_values neighbors", neighbors)
-        for neighbor in neighbors:
-            if neighbor not in assignment:
-                print("Assigned")
-                # The neighbor hasn't been assigned a value
-                for valueV in self.domains[var]:
-                    sortedValues.append(valueV)  # Test
-                    # for valueN in self.domains[neighbor]:
-                    #     # If the values match, increase the count of that value
-                    #     if valueV == valueN:
-                    #         countValues[valueV] += 1
-
-        return sortedValues
+        return list(self.domains[var])
 
     def select_unassigned_variable(self, assignment):
         """
@@ -279,7 +261,6 @@ class CrosswordCreator():
         """
         # The puzzle is solved
         if self.assignment_complete(assignment):
-            print(assignment)
             return assignment
 
         var = self.select_unassigned_variable(assignment)
@@ -291,7 +272,7 @@ class CrosswordCreator():
                 result = self.backtrack(assignment)
                 if result is not None:
                     return result
-                assignment[var] = None
+                assignment.pop(var)
         return None
 
 
