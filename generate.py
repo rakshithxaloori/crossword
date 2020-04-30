@@ -103,10 +103,14 @@ class CrosswordCreator():
         """
         # Remove a word from a variable's domain
         # if word's length != variable's length
+        removeWords = list()
         for variable in self.domains.keys():
             for word in self.domains[variable]:
                 if len(word) != variable.length:
-                    self.domains[variable].remove(word)
+                    removeWords.append((variable, word))
+
+        for variable, word in removeWords:
+            self.domains[variable].remove(word)
 
     def revise(self, x, y):
         """
@@ -118,18 +122,25 @@ class CrosswordCreator():
         False if no revision was made.
         """
         # x's domain must only contain those words that satisfy the overlaps with y
+        removeWords = list()
         revisionMade = False
         for wordX in self.domains[x]:
             palFound = False
             for wordY in self.domains[y]:
                 overlap = self.crossword.overlaps[x, y]
+                if overlap is None:
+                    continue
+                # If the letters match
                 if wordX[overlap[0]] == wordY[overlap[1]]:
                     palFound = True
                     break
             if not palFound:
                 # Remove the word from x's domain
-                self.domains[x].remove(wordX)
+                removeWords.append((x, wordX))
                 revisionMade = True
+
+        for x, wordX in removeWords:
+            self.domains[x].remove(wordX)
 
         return revisionMade
 
