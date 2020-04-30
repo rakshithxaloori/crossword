@@ -1,6 +1,7 @@
 import sys
-from random import sample
+from random import choice
 from copy import deepcopy
+from math import inf
 
 from crossword import *
 
@@ -246,8 +247,45 @@ class CrosswordCreator():
         return values.
         """
         unassignedVariables = set(
-            self.crossword.variables) - set(assignment.keys())  # Test
-        variable = sample(unassignedVariables, 1)[0]
+            self.crossword.variables) - set(assignment.keys())
+        
+        # Choose the variable with minimun number of remaining values in its domain
+        countMinValues = inf
+        # minVariables stores all the variables that have minimum number of remaining values in domain
+        minVariables = []
+        for variable in unassignedVariables:
+            countDomain = len(self.domains[variable])
+
+            # Found a new minimum count
+            if countDomain < countMinValues:
+                countMinValues = countDomain
+                minVariables.clear()
+                minVariables.append(variable)
+
+            # Found a similar count
+            elif countDomain == countMinValues:
+                minVariables.append(variable)
+
+        if len(minVariables) == 1:
+            return minVariables[0]
+
+        # Choose the highest degree variable
+        highestDegreeValue = -inf
+        highestDegreeVariables = []
+        for variable in minVariables:
+            countDegree = len(self.crossword.neighbors(variable))
+            if countDegree > highestDegreeValue:
+                highestDegreeValue = countDegree
+                highestDegreeVariables.clear()
+                highestDegreeVariables.append(variable)
+            elif countDegree == highestDegreeValue:
+                highestDegreeVariables.append(variable)
+
+        if len(highestDegreeVariables) == 1:
+            return highestDegreeVariables[0]
+        
+        # Choose randomly from the highest degree variables
+        variable = choice(highestDegreeVariables)
         return variable
 
     def backtrack(self, assignment):
